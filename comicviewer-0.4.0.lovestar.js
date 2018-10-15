@@ -56,8 +56,8 @@ jQuery(window).on('load', function() {
     var isFullscreen = false;
     
     // Used to detect size changes in finishImage().
-    var lastNaturalHeight = 0;
-    var smallestHeight = 1e32;
+    var lastFitHeight = 0;
+    var smallestFitHeight = 1e32;
  
     // Keyboard constants humbly "borrowed" from e-hentai.org.
     var KeyEvent = {
@@ -145,7 +145,10 @@ jQuery(window).on('load', function() {
             '',
             'Zoom:',
             '- Ctrl + Plus | Ctrl + Minus | Ctrl + Scroll Wheel',
-            '- Ctrl + 0 (zero) resets zoom',
+            '- Ctrl + 0 (zero)',
+            '',
+            'Toggle Browser Window:',
+            '- F11'
         ].join('\n'));
         return false;
     }
@@ -240,15 +243,18 @@ jQuery(window).on('load', function() {
 
 
     function finishImage(img) {
-        if (img.naturalHeight < smallestHeight) {
-            smallestHeight = img.naturalHeight;
-            updateWrapperHeight(img);            
+        var fitHeight = getFitHeight(img);
+        
+        // Set a minimum height for the page wrapper so it doesn't collapse when the page changes.
+        if (fitHeight < smallestFitHeight) {
+            smallestFitHeight = fitHeight;
+            PAGE_WRAPPER.css('min-height', smallestFitHeight);        
         }
         
         // Force a scroll when going between pages of different heights because
         // in these cases the scroll at the beginning of setPage() might fail.
-        if (lastNaturalHeight != img.naturalHeight) {
-            lastNaturalHeight = img.naturalHeight;
+        if (lastFitHeight != fitHeight) {
+            lastFitHeight = fitHeight;
             window.scroll(0, 1);
             window.scroll(0, 0);            
         }
@@ -261,10 +267,9 @@ jQuery(window).on('load', function() {
     }
     
     
-    function updateWrapperHeight(img) {
-        // Set a minimum height for the page wrapper so it doesn't collapse when the page changes.
+    function getFitHeight(img) {
         var ratio = (isSmallScreen ? $(window).width() : CONTAINER_WIDTH) / img.naturalWidth;
-        PAGE_WRAPPER.css('min-height', img.naturalHeight * ratio);
+        return (img.naturalHeight * ratio);
     }
 
 
